@@ -1,54 +1,42 @@
-name: Fork - Clone - Build Flutter App - Deploy to GitHub Pages
+name: Manual Trigger Workflow
 
 on:
   workflow_dispatch:
     inputs:
-      owner:
-        description: "Repository Owner"
+      environment:
+        description: 'Deployment environment'
         required: true
-      repo:
-        description: "Repository"
-        required: true
-      run-id:
-        description: "Run identifier"
-        required: true
+        default: 'production'
+        type: string
+      version:
+        description: 'Application version to deploy'
+        required: false
+        default: 'latest'
+        type: string
 
 jobs:
-  run:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      # Step 1: Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          flutter-version: 'stable'
+          node-version: '18'
 
-      - name: Print repository details
-        run: |
-          echo "Owner: ${{ github.event.inputs.owner }}"
-          echo "Repo: ${{ github.event.inputs.repo }}"
-          echo "Run ID: ${{ github.event.inputs.run-id }}"
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
 
-      - name: Trigger GitHub Action workflow (Real-time logs)
-        run: |
-          curl -X POST \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${{ github.event.inputs.owner }}/${{ github.event.inputs.repo }}/actions/workflows/manual-trigger.yml/dispatches \
-          -d '{"ref":"main"}'
-        
-      - name: Fetch Logs in Real-Time
-        run: |
-          curl -X GET \
-          -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
-          https://api.github.com/repos/${{ github.event.inputs.owner }}/${{ github.event.inputs.repo }}/actions/runs/${{ github.event.inputs.run-id }}/logs \
-          --output logs.txt
-        continue-on-error: true
+      # Step 4: Build the project
+      - name: Build the project
+        run: npm run build
 
-      - name: Display Logs
-        run: |
-          cat logs.txt
-        continue-on-error: true
+      # Step 5: Deploy (example)
+      - name: Deploy to ${{ inputs.environment }}
+        run: echo "Deploying version ${{ inputs.version }} to ${{ inputs.environment }} environment"
