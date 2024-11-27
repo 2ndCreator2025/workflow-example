@@ -9,9 +9,6 @@ on:
       repo:
         description: "Repository"
         required: true
-      fork-org:
-        description: "Fork organization"
-        required: true
       run-id:
         description: "Run identifier"
         required: true
@@ -33,7 +30,6 @@ jobs:
         run: |
           echo "Owner: ${{ github.event.inputs.owner }}"
           echo "Repo: ${{ github.event.inputs.repo }}"
-          echo "Fork Org: ${{ github.event.inputs.fork-org }}"
           echo "Run ID: ${{ github.event.inputs.run-id }}"
 
       - name: Trigger GitHub Action workflow (Real-time logs)
@@ -56,14 +52,3 @@ jobs:
         run: |
           cat logs.txt
         continue-on-error: true
-
-      - name: Instrument with OpenTelemetry
-        run: |
-          echo "Sending traces to OpenTelemetry Collector"
-          curl -X POST \
-          -H "Content-Type: application/json" \
-          -d '{
-            "traceId": "${{ github.event.inputs.run-id }}",
-            "operation": "Build & Deploy Flutter App",
-            "status": "success"
-          }' http://otel-collector:4318/v1/traces
