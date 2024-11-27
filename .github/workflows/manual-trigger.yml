@@ -1,42 +1,63 @@
-name: Manual Trigger Workflow
+name: Flutter Build, Test, and Deploy
 
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Deployment environment'
+      github-url:
+        description: 'Flutter Public GitHub repository URL'
         required: true
-        default: 'production'
-        type: string
-      version:
-        description: 'Application version to deploy'
-        required: false
-        default: 'latest'
         type: string
 
 jobs:
-  build-and-deploy:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout code
-        uses: actions/checkout@v3
+      # Step 1: Clone the repository using git clone
+      - name: Clone the repository
+        run: |
+          git clone ${{ github.event.inputs.github-url }} repo
 
-      # Step 2: Set up Node.js
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # Step 2: Set up Flutter SDK
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: '18'
+          flutter-version: 'stable' # Use 'stable' or specify a Flutter version
 
       # Step 3: Install dependencies
       - name: Install dependencies
-        run: npm install
+        run: |
+          cd repo
+          flutter pub get
 
-      # Step 4: Build the project
-      - name: Build the project
-        run: npm run build
+      # Step 4: Run Flutter tests (optional)
+      - name: Run tests
+        run: |
+          cd repo
+          flutter test
 
-      # Step 5: Deploy (example)
-      - name: Deploy to ${{ inputs.environment }}
-        run: echo "Deploying version ${{ inputs.version }} to ${{ inputs.environment }} environment"
+      # Step 5: Build the Flutter project (for web, iOS, Android, etc.)
+      - name: Build Flutter project
+        run: |
+          cd repo
+          flutter build web # Replace with flutter build ios or flutter build android as needed
+
+      # Step 6: Deploy to hosting service (Example: GitHub Pages)
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4.2.0
+        with:
+          branch: gh-pages
+          folder: build/web  # The output directory for Flutter web build
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Alternatively, deploy to other environments, e.g., Google Cloud, AWS, etc.
+      # - name: Deploy to Google Cloud
+      #   run: |
+      #     cd repo
+      #     gcloud app browse --project ${{ secrets.GCP_PROJECT_ID }}
+
+      # Step 7: Cleanup (optional)
+      - name: Cleanup
+        run: |
+          cd repo
+          flutter clean
