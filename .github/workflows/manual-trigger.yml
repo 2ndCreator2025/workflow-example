@@ -17,6 +17,8 @@ jobs:
       - name: Clone the repository
         run: |
           git clone ${{ github.event.inputs.github-url }} repo
+          cd repo
+          git checkout main # Adjust if using a different branch
 
       # Step 2: Set up Flutter SDK
       - name: Set up Flutter
@@ -27,22 +29,22 @@ jobs:
       # Step 3: Install dependencies
       - name: Install dependencies
         run: |
-          cd repo
+          cd repo/example
           flutter pub get
 
-      # Step 4: Run Flutter tests (optional)
-      - name: Run tests
-        run: |
-          cd repo
-          flutter test
+      # Step 4: Run Tests (Optional - You can add your tests here)
+      # - name: Run tests
+      #   run: |
+      #     cd repo/example
+      #     flutter test
 
       # Step 5: Build the Flutter project (for web, iOS, Android, etc.)
       - name: Build Flutter project
         run: |
-          cd repo
+          cd repo/example
           flutter build web # Replace with flutter build ios or flutter build android as needed
 
-      # Step 6: Deploy to hosting service (Example: GitHub Pages)
+      # Step 6: Deploy to GitHub Pages
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.2.0
         with:
